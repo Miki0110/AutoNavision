@@ -1,0 +1,12 @@
+name: AutoNavision_env
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - pyqt5
+    - tkcalendar
+    - pywinauto
+    - pygetwindow
+    - pyautogui
