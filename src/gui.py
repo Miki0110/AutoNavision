@@ -67,6 +67,7 @@ class OrderForm(tk.Tk):
         self.create_frames()
 
     def create_menu(self):
+        # Menu bar configuration
         menubar = tk.Menu(self)
 
         # "Sag" Work Menu
@@ -99,6 +100,7 @@ class OrderForm(tk.Tk):
         self.config(menu=menubar)
 
     def create_frames(self):
+        # Define the GUI configuration for each form
         self.form_configs = {
             # ------------------ Case Work ------------------
             'Internal commissioning': {
@@ -223,6 +225,7 @@ class OrderForm(tk.Tk):
 
     def create_entries_frame(self):
         self.entries_frame = tk.Frame(self.main_frame)
+        # If there are no entries, do not create the Treeview
         if not self.entries:
             return
         # Add Add Entry Button
@@ -245,14 +248,13 @@ class OrderForm(tk.Tk):
         self.entries_frame.grid_rowconfigure(1, weight=1)
         self.entries_frame.grid_columnconfigure(0, weight=1)
 
-        # Bind right-click event to the Treeview
+        # Bind right-click event to create a delete entry option
         self.entries_tree.bind("<Button-3>", self.show_context_menu)
-
-        # Create context menu
         self.context_menu = tk.Menu(self, tearoff=0)
         self.context_menu.add_command(label="Delete Entry", command=self.delete_entry)
 
     def load_form(self, task_name):
+        # Load the form for the selected task
         self.current_task = task_name
         if self.form_frame:
             self.form_frame.destroy()
@@ -264,6 +266,8 @@ class OrderForm(tk.Tk):
         self.geometry('')
 
     def generate_form(self, config):
+        # This method generates the GUI based on the type of fields in the config
+        # If it's desired to add more field types, they can be added here
         for idx, field in enumerate(config['fields']):
             label = tk.Label(self.form_frame, text=field['label'])
             label.grid(row=idx, column=0, padx=10, pady=5, sticky='w')
@@ -345,6 +349,7 @@ class OrderForm(tk.Tk):
         multiple_days = False
         end_date = None
 
+        # Each entry in the entries list should be a dictionary, with all values as strings
         for field in config['fields']:
             if field['label'] == 'Order Type':
                 order_template['order_type'] = field['var'].get()
@@ -435,6 +440,7 @@ class OrderForm(tk.Tk):
             self.entries_tree.delete(*self.entries_tree.get_children())
 
     def format_time_entry(self, event, entry_widget):
+        # Format the time entry as HH:MM:SS
         if event.keysym in ('BackSpace', 'Delete', 'Tab'):
             return
         content = entry_widget.get()

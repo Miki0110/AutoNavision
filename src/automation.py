@@ -17,6 +17,7 @@ class AutomationHelper:
         pyautogui.FAILSAFE = False
     
     def bring_app_to_foreground(self):
+        # Bring the application window in focus
         if self.app is not None:
             try:
                 self.app.top_window().set_focus()
@@ -121,7 +122,7 @@ class AutomationHelper:
             return False
 
         # Step 1: Press down arrow keys
-        # Press down 5 times
+        # Press down 5 times and left 20 times to reach the date field
         for _ in range(5):
             pyautogui.press('down')
             time.sleep(0.1)
