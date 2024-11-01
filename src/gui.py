@@ -18,11 +18,12 @@ order_line_mapping = {
     "Intern Møde": "100007",
     "Kurses Intern": "100002",
     "Kursus Extern": "100003",
+    "Kontor tid": "100008",
     "Kørsel/Rejsetid": "500900",
-    "Ferie": "2000003",
-    "Sygdom": "2000001",
-    "Barns sygedag": "2000002",
-    "Afspasering": "2000006",
+    "Ferie": "200003",
+    "Sygdom": "200001",
+    "Barns sygedag": "200002",
+    "Afspasering": "200006",
 
 }
 
@@ -91,6 +92,7 @@ class OrderForm(tk.Tk):
         uproduktiv_menu.add_command(label="Intern Møde", command=lambda: self.load_form('Internal meetings'))
         uproduktiv_menu.add_command(label="Intern Kursus", command=lambda: self.load_form('Internal courses'))
         uproduktiv_menu.add_command(label="Extern Kursus", command=lambda: self.load_form('External courses'))
+        uproduktiv_menu.add_command(label="Kontor tid", command=lambda: self.load_form('Deskwork'))
         menubar.add_cascade(label="Uproduktiv Tid", menu=uproduktiv_menu)
 
         # "Free days" Menu
@@ -191,7 +193,16 @@ class OrderForm(tk.Tk):
                 'fields': [
                     {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                     {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
-                    {'label': 'Order Line', 'type': 'combobox', 'options': ['Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kursus Extern'},
+                    {'label': 'Order Line', 'type': 'combobox', 'options': ['Kontor tid', 'Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kursus Extern'},
+                    {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
+                    {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
+                ]
+            },
+            'Deskwork': {
+                'fields': [
+                    {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
+                    {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                    {'label': 'Order Line', 'type': 'combobox', 'options': ['Kontor tid', 'Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kontor tid'},
                     {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                     {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
                 ]

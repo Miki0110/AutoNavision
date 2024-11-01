@@ -57,7 +57,7 @@ class AutomationHelper:
             print(f"Error locating '{image_name}': {e}")
             return None
 
-    def find_and_click_button(self, image_names, confidence=0.95):
+    def find_and_click_button(self, image_names, confidence=0.85):
         for image_name in image_names:
             image_path = os.path.join(self.image_folder, image_name)
             try:
@@ -74,17 +74,8 @@ class AutomationHelper:
 
     def open_multiklade(self):
         time.sleep(0.2)
-        # Find all images containing the word "Sager"
-        sager_images = []
-        for image_name in os.listdir(self.image_folder):
-            if 'sager' in image_name.lower():
-                sager_images.append(image_name)
-
-        # Locate and click the "Sager" button
-        if not self.find_and_click_button(sager_images):
-            print("Failed to click the 'Sager' button.")
-            return False
-
+        # Go to the "Sager" menu trough shortcuts
+        pyautogui.hotkey('ctrl', '5')
         time.sleep(0.2)
 
         # Find all images containing the word "Multiklade"
