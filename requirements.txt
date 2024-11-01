@@ -1,6 +1,5 @@
 pyautogui
 pygetwindow
 pywinauto
-pyqt
 tk
 tkcalander
