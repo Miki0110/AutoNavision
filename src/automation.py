@@ -9,7 +9,8 @@ class AutomationHelper:
     Helper class for automating tasks in Microsoft Dynamics NAV.
     """
     def __init__(self, data):
-        self.data = data
+        self.orders = data['Orders']
+        self.data = None
         self.app = self._connect_to_app()
         self.screen_width, self.screen_height = pyautogui.size()
         self.image_folder = self._set_image_folder()
@@ -28,7 +29,6 @@ class AutomationHelper:
             print("Application is not connected.")
             return False
 
-    
     def _set_image_folder(self):
         # Set up the image folder path
         parent_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -109,7 +109,9 @@ class AutomationHelper:
     def type_hours(self, hours_float):
         # Convert the float hours to the required string format (1.2 -> "1,2")
         formatted_hours = self.convert_float_to_comma_string(hours_float)
-        
+        # Max 2 decimal places
+        if len(formatted_hours.split(',')[1]) > 2:
+            formatted_hours = formatted_hours[:formatted_hours.rfind(',') + 3]
         # Simulate typing the formatted string
         pyautogui.typewrite(formatted_hours)
 
@@ -123,7 +125,10 @@ class AutomationHelper:
         for _ in range(5):
             pyautogui.press('down')
             time.sleep(0.1)
-
+        
+        for _ in range(20):
+            pyautogui.press('left')
+            time.sleep(0.01)
         # Step 2: Enter the date (format dd-mm-yy)
         pyautogui.typewrite(self.data['date'])
         time.sleep(0.1)
@@ -157,54 +162,90 @@ class AutomationHelper:
         # Step 7: Press Tab and enter normal hours
         pyautogui.press('tab')
         time.sleep(0.1)
-        normal, overwork1, overwork2 = self.calculate_hours()
-        self.type_hours(normal)
-        time.sleep(0.1)
+        if self.data['hours_input']:
+            normal, overwork1, overwork2 = self.calculate_hours()
+            self.type_hours(normal)
+            time.sleep(0.1)
 
-        # Step 8: Handle overwork hours
-        pyautogui.press('tab')
-        time.sleep(0.1)
-        if overwork1 > 0:
-            self.type_hours(overwork1)
-        pyautogui.press('tab')
-        time.sleep(0.1)
-        if overwork2 > 0:
-            self.type_hours(overwork2)
+            # Step 8: Handle overwork hours
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            if overwork1 > 0:
+                self.type_hours(overwork1)
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            if overwork2 > 0:
+                self.type_hours(overwork2)
+        else:
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            pyautogui.press('tab')
 
         # Step 9: Press Tab to reach driving hours fields
         pyautogui.press('tab')
         time.sleep(0.1)
         # Enter normal driving hours
-        normal_driving_hours, overwork_driving_hours = self.calculate_driving_hours()
-        self.type_hours(normal_driving_hours)
-        time.sleep(0.1)
-        # Enter overwork driving hours if any
-        pyautogui.press('tab')
-        time.sleep(0.1)
-        if overwork_driving_hours > 0:
-            self.type_hours(overwork_driving_hours)
+        if self.data['driving_hours_input']:
+            normal_driving_hours, overwork_driving_hours = self.calculate_driving_hours()
+            self.type_hours(normal_driving_hours)
+            time.sleep(0.1)
+            # Enter overwork driving hours if any
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            if overwork_driving_hours > 0:
+                self.type_hours(overwork_driving_hours)
 
         print("Automation completed successfully.")
         return True
 
-    def calculate_hours(self, overwork_limit_1=3):
+    def aggregate_hours_by_date(self):
+        date_hours = {}
+        for order in self.orders:
+            date = order['date']
+            total_hours = self.parse_time_to_decimal(order.get('hours_input', '0:0:0'))
+            driving_hours = self.parse_time_to_decimal(order.get('driving_hours_input', '0:0:0'))
+            date_hours.setdefault(date, {'work_hours': 0, 'driving_hours': 0})
+            date_hours[date]['work_hours'] += total_hours
+            date_hours[date]['driving_hours'] += driving_hours
+        return date_hours
+
+
+    def calculate_hours(self, overwork_limit_1=4):
+        date = self.data['date']
+        total_hours = self.date_hours[date]['work_hours']
+        total_driving_hours = self.date_hours[date]['driving_hours']
+
         # Determine normal hours based on the date (5 or 8 hours)
-        weekday = self.check_if_friday_or_weekend(self.data['date'])
+        weekday = self.check_if_friday_or_weekend(date)
         if weekday == "Friday":
             max_normal_hours = 5
         elif weekday == "Weekend":
             max_normal_hours = 0
+            overwork_limit_1 = 0
         else:
             max_normal_hours = 8
-        total_hours = self.parse_time_to_decimal(self.data['hours_input'])
-        overwork_hours = total_hours - max_normal_hours
+
+        # Total hours including driving
+        cumulative_hours = 0
+        combined_hours = total_hours + total_driving_hours
+        overwork_hours = combined_hours - max_normal_hours
         overwork_hours = max(overwork_hours, 0)  # Ensure overwork is not negative
 
-        # Split into Overwork 1 and Overwork 2
+        # Split overwork hours
         overwork_1 = min(overwork_hours, overwork_limit_1)
         overwork_2 = max(overwork_hours - overwork_limit_1, 0)
-        normal_hours = min(total_hours, max_normal_hours)
-        return normal_hours, overwork_1, overwork_2
+
+        # Distribute normal hours and overwork hours proportionally
+        entry_hours = self.parse_time_to_decimal(self.data.get('hours_input', '0:0:0'))
+        if combined_hours > 0:
+            normal_hours = (max_normal_hours * entry_hours) / combined_hours
+            overwork_1_hours = (overwork_1 * entry_hours) / combined_hours
+            overwork_2_hours = (overwork_2 * entry_hours) / combined_hours
+        else:
+            normal_hours = overwork_1_hours = overwork_2_hours = 0
+
+        return normal_hours, overwork_1_hours, overwork_2_hours
+
     
     def calculate_driving_hours(self):
         weekday = self.check_if_friday_or_weekend(self.data['date'])
@@ -258,17 +299,25 @@ class AutomationHelper:
     def perform_automation(self):
         # Example automation steps
         if not self.app:
-            print("Application is not connected. Exiting automation.")
+            print("Application is not opne. Please open Navision and try again.")
             return "Application not connected."
 
         if not self.bring_app_to_foreground():
-            print("Could not bring application to foreground. Exiting automation.")
+            print("Error, Could not bring application to foreground. Exiting automation.")
             return "Could not bring application to foreground"
         
-        if self.open_multiklade():
+        # Aggregate hours by date
+        self.date_hours = self.aggregate_hours_by_date()
+        
+        if not self.open_multiklade():
+            print("Could not find the Multiklade. Exiting automation.\n To improve this feature, take a screenshot of the Multiklade and Sager buttons and place them in the 'images' folder with corresponding names.")
+            return "Could not find Multiklade."
+        # Process each order
+        for order in self.orders:
+            self.data = order  # Set current order data
             if not self.insert_values():
-                print("Could not insert values. Exiting automation.")
-                return "Could not insert values."
+                print("Could not insert values for an entry. Exiting automation.")
+                return "Could not insert values for an entry."
         else:
             print("Could not open Multiklade. Exiting automation.")
             return "Could not find Multiklade."
