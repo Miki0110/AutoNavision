@@ -34,7 +34,7 @@ class OrderForm(tk.Tk):
         self.unproductive_number = '0240008'
         self.entries = []
         self.current_task = None
-        self.order_numbers_file = 'order_numbers.json'
+        self.order_numbers_file = os.path.dirname(os.path.dirname(__file__))+'/order_numbers.json'
         self.load_order_numbers()
 
         # Set the minimum window size
@@ -54,13 +54,17 @@ class OrderForm(tk.Tk):
         self.form_frame = tk.Frame(self.main_frame)
         self.form_frame.grid(row=0, column=0, sticky='nsew')
 
+        # Create buttons_frame and grid it
+        self.create_buttons_frame()
+        self.buttons_frame.grid(row=1, column=0, sticky='nsew')
+
         # Create entries_frame
         self.create_entries_frame()
-        self.entries_frame.grid(row=1, column=0, sticky='nsew')
 
         # Configure grid weights
         self.main_frame.grid_rowconfigure(0, weight=1)
-        self.main_frame.grid_rowconfigure(1, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=0)
+        self.main_frame.grid_rowconfigure(2, weight=1)
         self.main_frame.grid_columnconfigure(0, weight=1)
 
         # Create frames for different forms
@@ -98,6 +102,22 @@ class OrderForm(tk.Tk):
         menubar.add_cascade(label="Free days", menu=free_days_menu)
 
         self.config(menu=menubar)
+    
+    def create_buttons_frame(self):
+        self.buttons_frame = tk.Frame(self.main_frame)
+
+        # Add Add Entry Button
+        self.add_entry_button = tk.Button(self.buttons_frame, text="Add Entry", command=self.add_entry)
+        self.add_entry_button.grid(row=0, column=0, padx=10, pady=10, sticky='w')
+
+        # Add Process All Button
+        self.process_all_button = tk.Button(self.buttons_frame, text="Process All", command=self.process_all_entries)
+        self.process_all_button.grid(row=0, column=1, padx=10, pady=10, sticky='e')
+
+        # Configure grid weights for buttons_frame
+        self.buttons_frame.grid_columnconfigure(0, weight=1)
+        self.buttons_frame.grid_columnconfigure(1, weight=1)
+
 
     def create_frames(self):
         # Define the GUI configuration for each form
@@ -225,17 +245,7 @@ class OrderForm(tk.Tk):
 
     def create_entries_frame(self):
         self.entries_frame = tk.Frame(self.main_frame)
-        # If there are no entries, do not create the Treeview
-        if not self.entries:
-            return
-        # Add Add Entry Button
-        self.add_entry_button = tk.Button(self.entries_frame, text="Add Entry", command=self.add_entry)
-        self.add_entry_button.grid(row=0, column=0, padx=10, pady=10, sticky='w')
-
-        # Add Process All Button
-        self.process_all_button = tk.Button(self.entries_frame, text="Process All", command=self.process_all_entries)
-        self.process_all_button.grid(row=0, column=1, padx=10, pady=10, sticky='e')
-
+        
         # Add Treeview to display entries
         self.entries_tree = ttk.Treeview(self.entries_frame, columns=('Date', 'Order Number', 'Order Line', 'Hours'), show='headings')
         self.entries_tree.heading('Date', text='Date')
@@ -253,6 +263,16 @@ class OrderForm(tk.Tk):
         self.context_menu = tk.Menu(self, tearoff=0)
         self.context_menu.add_command(label="Delete Entry", command=self.delete_entry)
 
+        # Populate the Treeview with existing entries
+        for entry in self.entries:
+            self.entries_tree.insert('', 'end', values=(
+                entry.get('date'),
+                entry.get('order_number'),
+                entry.get('order_line'),
+                entry.get('hours_input') or entry.get('driving_hours_input')
+            ))
+
+
     def load_form(self, task_name):
         # Load the form for the selected task
         self.current_task = task_name
@@ -261,6 +281,7 @@ class OrderForm(tk.Tk):
         self.form_frame = tk.Frame(self.main_frame)
         self.form_frame.grid(row=0, column=0, sticky='nsew')
         self.generate_form(self.form_configs[task_name])
+        
         # Update window size
         self.update_idletasks()
         self.geometry('')
@@ -337,7 +358,7 @@ class OrderForm(tk.Tk):
                 if field['label'] == 'Multiple Days':
                     field_var.set(field.get('default', False))
                     field_var.trace('w', self.multiple_days_toggled)
-
+        
         # Update window size
         self.update_idletasks()
         self.geometry('')
@@ -349,7 +370,13 @@ class OrderForm(tk.Tk):
         multiple_days = False
         end_date = None
 
-        # Each entry in the entries list should be a dictionary, with all values as strings
+        # First, collect 'Multiple Days' value
+        for field in config['fields']:
+            if field['label'] == 'Multiple Days':
+                multiple_days = field['var'].get()
+                break
+
+        # Now, collect other fields
         for field in config['fields']:
             if field['label'] == 'Order Type':
                 order_template['order_type'] = field['var'].get()
@@ -366,15 +393,15 @@ class OrderForm(tk.Tk):
             elif field['label'] == 'Date':
                 start_date = field['widget'].get_date()
             elif field['label'] == 'End Date':
-                end_date = field['widget'].get_date()
+                if multiple_days:
+                    end_date = field['widget'].get_date()
             elif field['label'] == 'Time (H:M:S)':
                 order_template['hours_input'] = field['var'].get()
             elif field['label'] == 'Driving Time (H:M:S)':
                 order_template['driving_hours_input'] = field['var'].get()
             elif field['label'] == 'Description':
                 order_template['description'] = field['widget'].get('1.0', tk.END).strip()
-            elif field['label'] == 'Multiple Days':
-                multiple_days = field['var'].get()
+        # 'Multiple Days' already processed
 
         if not order_template.get('order_number'):
             order_template['order_number'] = self.unproductive_number
@@ -382,6 +409,12 @@ class OrderForm(tk.Tk):
             order_template['driving_hours_input'] = "00:00:00"
         if not order_template.get('hours_input'):
             order_template['hours_input'] = "00:00:00"
+
+        if not self.entries_frame.winfo_ismapped():
+            self.entries_frame.grid(row=2, column=0, sticky='nsew')
+            # Optionally, update window size
+            self.update_idletasks()
+            self.geometry('')
 
         if multiple_days and end_date and end_date >= start_date:
             delta = end_date - start_date
@@ -416,6 +449,7 @@ class OrderForm(tk.Tk):
         # Reset the form fields
         self.reset_to_defaults()
         messagebox.showinfo("Entry Added", "The entry has been added to the list.")
+
 
     def process_all_entries(self):
         if not self.entries:
