@@ -92,11 +92,6 @@ class AutomationHelper:
         time.sleep(0.2)
 
         return True
-    
-    def convert_float_to_comma_string(self, hours_float):
-        # Convert the float to a string and replace the decimal point with a comma
-        hours_str = str(hours_float).replace('.', ',')
-        return hours_str
 
     def type_hours(self, hours_float):
         # Convert the float hours to the required string format (1.2 -> "1,2")

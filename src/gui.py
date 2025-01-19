@@ -4,6 +4,8 @@ from tkinter import messagebox
 from tkcalendar import DateEntry
 from datetime import datetime, timedelta
 from automation import AutomationHelper
+from formHandler import FormHandler
+from config_handler import get_config, update_config
 import re
 import json
 import os
@@ -32,10 +34,10 @@ class OrderForm(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Order Entry Form")
-        self.unproductive_number = '0240008'
-        self.entries = []
+        self.formhandler = FormHandler(self)
+        self.config = get_config()
         self.current_task = None
-        self.order_numbers_file = os.path.dirname(os.path.dirname(__file__))+'/order_numbers.json'
+        self.order_numbers_file = os.path.dirname(os.path.dirname(__file__))+self.config["paths"]["order_number"]
         self.load_order_numbers()
 
         # Set the minimum window size
@@ -375,91 +377,76 @@ class OrderForm(tk.Tk):
         self.geometry('')
 
     def add_entry(self):
-        # Collect form data as in submit_form
+        # Collect form data
         config = self.form_configs[self.current_task]
-        order_template = {}  # All data should be in String format
         multiple_days = False
         end_date = None
+        order_template = {}
 
-        # First, collect 'Multiple Days' value
+        # Collect 'Multiple Days' value
         for field in config['fields']:
             if field['label'] == 'Multiple Days':
                 multiple_days = field['var'].get()
                 break
 
-        # Now, collect other fields
+        # Collect other fields
         for field in config['fields']:
             if field['label'] == 'Order Type':
-                order_template['order_type'] = field['var'].get()
+                order_template['type'] = field['var'].get()
             elif field['label'] == 'Order Number':
-                order_template['order_number'] = field['var'].get()
+                order_template['number'] = field['var'].get() or self.unproductive_number
             elif field['label'] == 'Order Line':
-                # Map the Order Line to the corresponding number
                 order_line = field['var'].get()
-                order_line_num = order_line_mapping.get(order_line, None)
-                if not order_line_num:
+                order_template['line'] = order_line_mapping.get(order_line, None)
+                if not order_template['line']:
                     messagebox.showerror("Order Line Error", f"Order Line '{order_line}' is not valid.")
                     return
-                order_template['order_line'] = order_line_num
             elif field['label'] == 'Date':
                 start_date = field['widget'].get_date()
             elif field['label'] == 'End Date':
                 if multiple_days:
                     end_date = field['widget'].get_date()
             elif field['label'] == 'Time (H:M:S)':
-                order_template['hours_input'] = field['var'].get()
+                time_str = field['var'].get()
+                order_template['work_hours_used'] = self.convert_time_to_hours(time_str if time_str else "00:00:00")
             elif field['label'] == 'Driving Time (H:M:S)':
-                order_template['driving_hours_input'] = field['var'].get()
+                driving_time_str = field['var'].get()
+                order_template['driving_hours_used'] = self.convert_time_to_hours(driving_time_str if driving_time_str else "00:00:00")
             elif field['label'] == 'Description':
                 order_template['description'] = field['widget'].get('1.0', tk.END).strip()
-        # 'Multiple Days' already processed
 
-        if not order_template.get('order_number'):
-            order_template['order_number'] = self.unproductive_number
-        if not order_template.get('driving_hours_input'):
-            order_template['driving_hours_input'] = "00:00:00"
-        if not order_template.get('hours_input'):
-            order_template['hours_input'] = "00:00:00"
-
-        if not self.entries_frame.winfo_ismapped():
-            self.entries_frame.grid(row=2, column=0, sticky='nsew')
-            # Optionally, update window size
-            self.update_idletasks()
-            self.geometry('')
-
+        # Add entries to FormHandler
         if multiple_days and end_date and end_date >= start_date:
-            delta = end_date - start_date
-            for i in range(delta.days + 1):
+            delta = (end_date - start_date).days + 1
+            for i in range(delta):
                 current_date = start_date + timedelta(days=i)
-                # Create a copy of the order for this date
-                order = order_template.copy()
-                order['date'] = current_date.strftime('%d-%m-%y')
-                # Add the order to entries list
-                self.entries.append(order)
-                # Add the entry to the Treeview for display
-                self.entries_tree.insert('', 'end', values=(
-                    order.get('date'),
-                    order.get('order_number'),
-                    order.get('order_line'),
-                    order.get('hours_input') or order.get('driving_hours_input')
-                ))
+                self.formhandler.add_form(
+                    date=current_date.strftime('%Y-%m-%d'),
+                    type=order_template['type'],
+                    number=order_template['number'],
+                    name=self.order_numbers.get(order_template['number'], ""),
+                    line=order_template['line'],
+                    work_hours_used=order_template.get('work_hours_used', 0),
+                    driving_hours_used=order_template.get('driving_hours_used', 0),
+                    description=order_template.get('description', "")
+                )
         else:
-            # Single day entry
-            order = order_template.copy()
-            order['date'] = start_date.strftime('%d-%m-%y')
-            # Add the order to entries list
-            self.entries.append(order)
-            # Add the entry to the Treeview for display
-            self.entries_tree.insert('', 'end', values=(
-                order.get('date'),
-                order.get('order_number'),
-                order.get('order_line'),
-                order.get('hours_input') or order.get('driving_hours_input')
-            ))
+            self.formhandler.add_form(
+                date=start_date.strftime('%Y-%m-%d'),
+                type=order_template['type'],
+                number=order_template['number'],
+                name=self.order_numbers.get(order_template['number'], ""),
+                line=order_template['line'],
+                work_hours_used=order_template.get('work_hours_used', 0),
+                driving_hours_used=order_template.get('driving_hours_used', 0),
+                description=order_template.get('description', "")
+            )
 
-        # Reset the form fields
+        # Refresh Treeview and reset form
+        self.refresh_entries_tree()
         self.reset_to_defaults()
-        messagebox.showinfo("Entry Added", "The entry has been added to the list.")
+        messagebox.showinfo("Entry Added", "The entry has been added.")
+
 
 
     def process_all_entries(self):
@@ -470,7 +457,7 @@ class OrderForm(tk.Tk):
         # Prepare data for AutomationHelper
         data = {
             'Task': self.current_task,
-            'Orders': self.entries  # Note the change to 'Orders' (plural)
+            'Orders': self.entries 
         }
 
         # Pass the data to AutomationHelper
@@ -600,14 +587,42 @@ class OrderForm(tk.Tk):
             # Confirm deletion
             confirm = messagebox.askyesno("Delete Entry", "Are you sure you want to delete the selected entry?")
             if confirm:
-                # Get the index of the selected item
-                index = self.entries_tree.index(selected_item)
-                # Remove from entries list
-                del self.entries[index]
-                # Remove from Treeview
-                self.entries_tree.delete(selected_item)
+                # Get selected entry's values
+                values = self.entries_tree.item(selected_item, "values")
+                date, number, line = values[0], values[1], values[2]
+
+                # Remove entry from FormHandler
+                self.formhandler._data_list = [
+                    entry for entry in self.formhandler._data_list
+                    if not (entry["Date"] == date and entry["Number"] == number and entry["Line"] == line)
+                ]
+                # Refresh the Treeview
+                self.refresh_entries_tree()
         else:
             messagebox.showwarning("No Selection", "No entry selected.")
+
+    def refresh_entries_tree(self):
+        # Clear existing Treeview entries
+        self.entries_tree.delete(*self.entries_tree.get_children())
+
+        # Populate Treeview from FormHandler
+        for _, row in self.formhandler.data_frame.iterrows():
+            self.entries_tree.insert('', 'end', values=(
+                row["Date"], row["Number"], row["Line"], 
+                f"{row['Normal Hours'] + row['Overwork 1 Hours'] + row['Overwork 2 Hours']:.2f}"
+            ))
+
+
+    def convert_time_to_hours(self, time_str):
+        h, m, s = map(int, time_str.split(":"))
+        return h + m / 60 + s / 3600
+    
+    def view_entries(self):
+        df = self.formhandler.data_frame
+        if df.empty:
+            messagebox.showinfo("No Entries", "No entries in FormHandler.")
+        else:
+            print(df)  # Or display the DataFrame in a dedicated UI window
 
 
 if __name__ == "__main__":

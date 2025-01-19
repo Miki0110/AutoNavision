@@ -1,0 +1,29 @@
+{
+    "overwork_limits": {
+      "overwork1": 4,
+      "overwork2": "no limit"
+    },
+    "order_line_mapping": {
+      "Software": "180200",
+      "Intern Indkøring": "700300",
+      "Extern Indkøring": "700800",
+      "Intern Møde": "100007",
+      "Kursus Intern": "100002",
+      "Kursus Extern": "100003",
+      "Kontor tid": "100008",
+      "Kørsel/Rejsetid": "500900",
+      "Ferie": "200003",
+      "Sygdom": "200001",
+      "Barns sygedag": "200002",
+      "Afspasering": "200006"
+    },
+    "paths": {
+        "order_number": "'/order_numbers.json"
+    },
+    "defaults": {
+      "unproductive_number": "0240008",
+      "work_hours": "08:00:00",
+      "driving_hours": "00:00:00"
+    }
+  }
+  
