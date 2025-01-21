@@ -7,6 +7,6 @@ dependencies:
   - pip:
     - pyqt5
     - tkcalendar
-    - pywinauto
-    - pygetwindow
+    - pandas
+    - pynput
     - pyautogui

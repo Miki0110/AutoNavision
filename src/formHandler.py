@@ -1,14 +1,12 @@
 import pandas as pd
+from config_handler import get_config, update_config
 
 class FormHandler:
-    def __init__(self, form, overwork1_limit=4):
+    def __init__(self, form):
         self.form = form
-        self.overwork1_limit = overwork1_limit
-        self._data_frame = pd.DataFrame(columns=[
-            "Date", "Type", "Number", "Name", "Line", 
-            "Normal Hours", "Overwork 1 Hours", "Overwork 2 Hours",
-            "Normal Driving", "Overwork 1 Driving", "Overwork 2 Driving", "Description"
-        ])
+        self.config = get_config()
+        self.overwork1_limit = self.config["overwork_limits"]["overwork1"]
+        self.data_list = []
 
     def add_form(self, date, type, number, name, line, work_hours_used, driving_hours_used, description):
         # Calculate the work hours and overtime
@@ -28,19 +26,27 @@ class FormHandler:
             "Overwork 2 Driving": entry_hours["Overwork 2 Driving"],
             "Description": description
         }
-        self._data_frame = pd.concat([self._data_frame, pd.DataFrame([new_row])], ignore_index=True)
+        self.data_list.append(new_row)
 
     def calculate_hours(self, date_entry, work_hours_used, driving_hours_used):
         # Filter the DataFrame to get rows for the given date
-        filtered_data = self._data_frame[self._data_frame["Date"] == date_entry]
+        if self.len > 0:
+            filtered_data = self.data_frame[self.data_frame["Date"] == date_entry]
 
-        # Sum up existing hours for the given date
-        normal_hours = filtered_data["Normal Hours"].sum()
-        overwork1_hours = filtered_data["Overwork 1 Hours"].sum()
-        overwork2_hours = filtered_data["Overwork 2 Hours"].sum()
-        normal_driving = filtered_data["Normal Driving"].sum()
-        overwork1_driving = filtered_data["Overwork 1 Driving"].sum()
-        overwork2_driving = filtered_data["Overwork 2 Driving"].sum()
+            # Sum up existing hours for the given date
+            normal_hours = filtered_data["Normal Hours"].sum()
+            overwork1_hours = filtered_data["Overwork 1 Hours"].sum()
+            overwork2_hours = filtered_data["Overwork 2 Hours"].sum()
+            normal_driving = filtered_data["Normal Driving"].sum()
+            overwork1_driving = filtered_data["Overwork 1 Driving"].sum()
+            overwork2_driving = filtered_data["Overwork 2 Driving"].sum()
+        else:
+            normal_hours = 0
+            overwork1_hours = 0
+            overwork2_hours = 0
+            normal_driving = 0
+            overwork1_driving = 0
+            overwork2_driving = 0
 
         # Determine the normal hour limits based on the day of the week
         day_of_week = pd.Timestamp(date_entry).dayofweek  # 0 = Monday, ..., 6 = Sunday
@@ -79,13 +85,17 @@ class FormHandler:
             "Overwork 1 Driving": new_overwork1_driving,
             "Overwork 2 Driving": new_overwork2_driving,
         }
-
-
-    def convert_float_to_comma_string(self, input_float):
-        # Convert the float to a string and replace the decimal point with a comma
-        output_str = str(input_float).replace('.', ',')
-        return output_str
     
+    def __len__(self):
+        return len(self.data_list)
+    
+    def __iter__(self):
+        return iter(self.data_list)
+
     @property
     def data_frame(self):
-        return self._data_frame
+        return pd.DataFrame(self.data_list)
+
+    @property
+    def len(self):
+        return len(self.data_list)

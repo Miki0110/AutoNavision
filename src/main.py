@@ -6,6 +6,7 @@ def main():
 
     # Create the OrderForm
     app = OrderForm()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()
 
 

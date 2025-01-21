@@ -7,38 +7,24 @@ from automation import AutomationHelper
 from formHandler import FormHandler
 from config_handler import get_config, update_config
 import re
-import json
-import os
+from pynput import mouse, keyboard
+from pynput.mouse import Listener as MouseListener
+from pynput.keyboard import Listener as KeyboardListener, Key
 import tkinter.simpledialog as simpledialog 
-
-
-# Mapping of Order Line names to their corresponding numbers
-order_line_mapping = {
-    "Software": "180200",
-    "Intern Indkøring": "700300",
-    "Extern Indkøring": "700800",
-    "Intern Møde": "100007",
-    "Kurses Intern": "100002",
-    "Kursus Extern": "100003",
-    "Kontor tid": "100008",
-    "Kørsel/Rejsetid": "500900",
-    "Ferie": "200003",
-    "Sygdom": "200001",
-    "Barns sygedag": "200002",
-    "Afspasering": "200006",
-
-}
-
 
 class OrderForm(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Order Entry Form")
         self.formhandler = FormHandler(self)
-        self.config = get_config()
+        self.value_config = get_config()
         self.current_task = None
-        self.order_numbers_file = os.path.dirname(os.path.dirname(__file__))+self.config["paths"]["order_number"]
-        self.load_order_numbers()
+        self.order_numbers = self.value_config["order_numbers"]
+        self.unproductive_number = self.value_config["defaults"]["unproductive_number"]
+        self.order_line_mapping = self.value_config["order_line_mapping"]
+        self.mouse_listener = None
+        self.keyboard_listener = None
+        self.ctrl_pressed = False
 
         # Set the minimum window size
         self.minsize(400, 150)
@@ -115,7 +101,7 @@ class OrderForm(tk.Tk):
         self.add_entry_button.grid(row=0, column=0, padx=10, pady=10, sticky='w')
 
         # Add Process All Button
-        self.process_all_button = tk.Button(self.buttons_frame, text="Process All", command=self.process_all_entries)
+        self.process_all_button = tk.Button(self.buttons_frame, text="Process All", command=self.start_event_listeners)
         self.process_all_button.grid(row=0, column=1, padx=10, pady=10, sticky='e')
 
         # Configure grid weights for buttons_frame
@@ -277,13 +263,13 @@ class OrderForm(tk.Tk):
         self.context_menu.add_command(label="Delete Entry", command=self.delete_entry)
 
         # Populate the Treeview with existing entries
-        for entry in self.entries:
-            self.entries_tree.insert('', 'end', values=(
-                entry.get('date'),
-                entry.get('order_number'),
-                entry.get('order_line'),
-                entry.get('hours_input') or entry.get('driving_hours_input')
-            ))
+        #for entry in self.entries:
+        #    self.entries_tree.insert('', 'end', values=(
+        #        entry.get('date'),
+        #        entry.get('order_number'),
+        #        entry.get('order_line'),
+        #        entry.get('hours_input') or entry.get('driving_hours_input')
+        #    ))
 
 
     def load_form(self, task_name):
@@ -397,7 +383,7 @@ class OrderForm(tk.Tk):
                 order_template['number'] = field['var'].get() or self.unproductive_number
             elif field['label'] == 'Order Line':
                 order_line = field['var'].get()
-                order_template['line'] = order_line_mapping.get(order_line, None)
+                order_template['line'] = self.order_line_mapping.get(order_line, None)
                 if not order_template['line']:
                     messagebox.showerror("Order Line Error", f"Order Line '{order_line}' is not valid.")
                     return
@@ -443,33 +429,57 @@ class OrderForm(tk.Tk):
             )
 
         # Refresh Treeview and reset form
-        self.refresh_entries_tree()
+        #self.refresh_entries_tree()
         self.reset_to_defaults()
         messagebox.showinfo("Entry Added", "The entry has been added.")
 
+    def start_event_listeners(self):
+        """Start mouse and keyboard listeners for CTRL + Left Click."""
+        self.mouse_listener = MouseListener(on_click=self.on_mouse_click)
+        self.keyboard_listener = KeyboardListener(on_press=self.on_key_press, on_release=self.on_key_release)
+        
+        self.mouse_listener.start()
+        self.keyboard_listener.start()
 
+    def stop_event_listeners(self):
+        """Stop the listeners when the app is closed."""
+        if self.mouse_listener:
+            self.mouse_listener.stop()
+        if self.keyboard_listener:
+            self.keyboard_listener.stop()
+
+    def on_key_press(self, key):
+        """Track if CTRL is pressed."""
+        if key in [Key.ctrl_l, Key.ctrl_r]:
+            self.ctrl_pressed = True
+
+    def on_key_release(self, key):
+        """Track if CTRL is released."""
+        if key in [Key.ctrl_l, Key.ctrl_r]:
+            self.ctrl_pressed = False
+
+    def on_mouse_click(self, x, y, button, pressed):
+        """Trigger `process_all_entries` on CTRL + Left Click."""
+        if pressed and button == mouse.Button.left and self.ctrl_pressed:
+            print("CTRL + Left Click detected. Triggering process_all_entries.")
+            self.process_all_entries()
 
     def process_all_entries(self):
-        if not self.entries:
+        """Process all entries when triggered."""
+        if len(self.formhandler) == 0:
             messagebox.showwarning("No Entries", "No entries to process.")
             return
 
-        # Prepare data for AutomationHelper
-        data = {
-            'Task': self.current_task,
-            'Orders': self.entries 
-        }
-
         # Pass the data to AutomationHelper
-        automation = AutomationHelper(data)
+        automation = AutomationHelper(self.formhandler)
         result = automation.perform_automation()
         if result:
             messagebox.showerror("Automation Error", result)
         else:
             messagebox.showinfo("Automation", "All entries have been submitted to the application.")
             # Clear entries after processing
-            self.entries.clear()
-            self.entries_tree.delete(*self.entries_tree.get_children())
+            self.formhandler.data_list = []
+            #self.entries_tree.delete(*self.entries_tree.get_children())
 
     def format_time_entry(self, event, entry_widget):
         # Format the time entry as HH:MM:SS
@@ -518,18 +528,6 @@ class OrderForm(tk.Tk):
                 field['widget'].delete('1.0', tk.END)
             else:
                 field_var.set(default_value)
-
-    def load_order_numbers(self):
-        # Load order numbers from file or initialize empty dict
-        if os.path.exists(self.order_numbers_file):
-            with open(self.order_numbers_file, 'r') as f:
-                self.order_numbers = json.load(f)
-        else:
-            self.order_numbers = {}  # Format: {"Order Number": "Order Name"}
-
-    def save_order_numbers(self):
-        with open(self.order_numbers_file, 'w') as f:
-            json.dump(self.order_numbers, f)
 
     def populate_order_number(self, event):
         selected_order_number = event.widget.get()
@@ -623,8 +621,14 @@ class OrderForm(tk.Tk):
             messagebox.showinfo("No Entries", "No entries in FormHandler.")
         else:
             print(df)  # Or display the DataFrame in a dedicated UI window
+    
+    def on_closing(self):
+        """Stop listeners and close the application."""
+        self.stop_event_listeners()
+        self.destroy()
 
 
 if __name__ == "__main__":
     app = OrderForm()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()
