@@ -86,6 +86,9 @@ class FormHandler:
             "Overwork 2 Driving": new_overwork2_driving,
         }
     
+    def remove_form(self, index):
+        self.data_list.pop(index)
+
     def __len__(self):
         return len(self.data_list)
     

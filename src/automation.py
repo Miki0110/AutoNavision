@@ -93,28 +93,6 @@ class AutomationHelper:
 
         print("Automation completed successfully.")
         return True
-        # Convert H:M:S format to decimal hours
-        parts = time_str.strip().split(':')
-        try:
-            if len(parts) == 3:
-                hours = int(parts[0])
-                minutes = int(parts[1])
-                seconds = int(parts[2])
-            elif len(parts) == 2:
-                hours = int(parts[0])
-                minutes = int(parts[1])
-                seconds = 0
-            elif len(parts) == 1:
-                hours = int(parts[0])
-                minutes = 0
-                seconds = 0
-            else:
-                raise ValueError("Invalid time format")
-            total_hours = hours + minutes / 60 + seconds / 3600
-            return total_hours
-        except ValueError:
-            print("Invalid time format. Please use H:M:S.")
-            return 0
 
     def perform_automation(self):
         # Process each order

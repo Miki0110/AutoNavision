@@ -246,7 +246,7 @@ class OrderForm(tk.Tk):
         self.entries_frame = tk.Frame(self.main_frame)
         
         # Add Treeview to display entries
-        self.entries_tree = ttk.Treeview(self.entries_frame, columns=('Date', 'Order Number', 'Order Line', 'Hours'), show='headings')
+        self.entries_tree = ttk.Treeview(self.entries_frame, columns=('Index', 'Date', 'Order Number', 'Order Line', 'Hours'), show='headings')
         self.entries_tree.heading('Date', text='Date')
         self.entries_tree.heading('Order Number', text='Order Number')
         self.entries_tree.heading('Order Line', text='Order Line')
@@ -263,13 +263,15 @@ class OrderForm(tk.Tk):
         self.context_menu.add_command(label="Delete Entry", command=self.delete_entry)
 
         # Populate the Treeview with existing entries
-        #for entry in self.entries:
-        #    self.entries_tree.insert('', 'end', values=(
-        #        entry.get('date'),
-        #        entry.get('order_number'),
-        #        entry.get('order_line'),
-        #        entry.get('hours_input') or entry.get('driving_hours_input')
-        #    ))
+        for i, entry in enumerate(self.formhandler):
+            total_hours = entry["Normal Hours"] + entry["Overwork 1 Hours"] + entry["Overwork 2 Hours"] + entry["Normal Driving"] + entry["Overwork 1 Driving"] + entry["Overwork 2 Driving"]
+            self.entries_tree.insert('', 'end', values=(
+            i,
+            entry["Date"],
+            entry["Number"],
+            entry["Line"],
+            f'{total_hours:.2f}'
+            ))
 
 
     def load_form(self, task_name):
@@ -401,6 +403,12 @@ class OrderForm(tk.Tk):
             elif field['label'] == 'Description':
                 order_template['description'] = field['widget'].get('1.0', tk.END).strip()
 
+            if not self.entries_frame.winfo_ismapped():
+                self.entries_frame.grid(row=2, column=0, sticky='nsew')
+                # Optionally, update window size
+                self.update_idletasks()
+                self.geometry('')
+
         # Add entries to FormHandler
         if multiple_days and end_date and end_date >= start_date:
             delta = (end_date - start_date).days + 1
@@ -429,7 +437,7 @@ class OrderForm(tk.Tk):
             )
 
         # Refresh Treeview and reset form
-        #self.refresh_entries_tree()
+        self.refresh_entries_tree()
         self.reset_to_defaults()
         messagebox.showinfo("Entry Added", "The entry has been added.")
 
@@ -479,7 +487,7 @@ class OrderForm(tk.Tk):
             messagebox.showinfo("Automation", "All entries have been submitted to the application.")
             # Clear entries after processing
             self.formhandler.data_list = []
-            #self.entries_tree.delete(*self.entries_tree.get_children())
+            self.entries_tree.delete(*self.entries_tree.get_children())
 
     def format_time_entry(self, event, entry_widget):
         # Format the time entry as HH:MM:SS
@@ -587,13 +595,11 @@ class OrderForm(tk.Tk):
             if confirm:
                 # Get selected entry's values
                 values = self.entries_tree.item(selected_item, "values")
-                date, number, line = values[0], values[1], values[2]
+                index, date, number, line = values[0], values[1], values[2], values[3]
 
                 # Remove entry from FormHandler
-                self.formhandler._data_list = [
-                    entry for entry in self.formhandler._data_list
-                    if not (entry["Date"] == date and entry["Number"] == number and entry["Line"] == line)
-                ]
+                self.formhandler.remove_form(int(index))
+
                 # Refresh the Treeview
                 self.refresh_entries_tree()
         else:
@@ -604,11 +610,16 @@ class OrderForm(tk.Tk):
         self.entries_tree.delete(*self.entries_tree.get_children())
 
         # Populate Treeview from FormHandler
-        for _, row in self.formhandler.data_frame.iterrows():
+        for i, item in enumerate(self.formhandler):
+            total_hours = item["Normal Hours"] + item["Overwork 1 Hours"] + item["Overwork 2 Hours"] + item["Normal Driving"] + item["Overwork 1 Driving"] + item["Overwork 2 Driving"]
             self.entries_tree.insert('', 'end', values=(
-                row["Date"], row["Number"], row["Line"], 
-                f"{row['Normal Hours'] + row['Overwork 1 Hours'] + row['Overwork 2 Hours']:.2f}"
+                i,
+                item["Date"],
+                item["Number"],
+                item["Line"], 
+                f'{total_hours:.2f}'
             ))
+        return
 
 
     def convert_time_to_hours(self, time_str):
