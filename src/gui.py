@@ -551,7 +551,8 @@ class OrderForm(tk.Tk):
                 self.order_numbers[current_value] = order_name
                 # Update the combobox values
                 self.order_number_combobox.config(values=list(self.order_numbers.keys()))
-                self.save_order_numbers()
+                self.config['order_number'] = self.order_numbers
+                update_config(self.config)
                 self.order_name_var.set(order_name)
             else:
                 messagebox.showinfo("Info", "Order Number not added.")
