@@ -20,11 +20,12 @@ class AutomationHelper:
         pyautogui.typewrite(hours_str)
 
     def insert_values(self):
+        time.sleep(0.1)
         # Step 1: Press down arrow keys
-        # Press left 5 times to make sure the cursor is at the beginning of the date field
-        for _ in range(5):
-            pyautogui.press('left')
-            time.sleep(0.01)
+        pyautogui.press('down', presses=3, interval=0.1)
+        # Press left until it's the first field
+        pyautogui.press('left', presses=20, interval=0.1)
+
         # Step 2: Enter the date (format dd-mm-yy)
         pyautogui.typewrite(self.data['Date'])
         time.sleep(0.1)
