@@ -415,7 +415,7 @@ class OrderForm(tk.Tk):
             for i in range(delta):
                 current_date = start_date + timedelta(days=i)
                 self.formhandler.add_form(
-                    date=current_date.strftime('%Y-%m-%d'),
+                    date=current_date.strftime('%d-%m-%y'),
                     type=order_template['type'],
                     number=order_template['number'],
                     name=self.order_numbers.get(order_template['number'], ""),
@@ -426,7 +426,7 @@ class OrderForm(tk.Tk):
                 )
         else:
             self.formhandler.add_form(
-                date=start_date.strftime('%Y-%m-%d'),
+                date=start_date.strftime('%d-%m-%y'),
                 type=order_template['type'],
                 number=order_template['number'],
                 name=self.order_numbers.get(order_template['number'], ""),
@@ -469,8 +469,12 @@ class OrderForm(tk.Tk):
     def on_mouse_click(self, x, y, button, pressed):
         """Trigger `process_all_entries` on CTRL + Left Click."""
         if pressed and button == mouse.Button.left and self.ctrl_pressed:
-            print("CTRL + Left Click detected. Triggering process_all_entries.")
+            # Wait for the CTRL key to be released
+            while self.ctrl_pressed:
+                pass
             self.process_all_entries()
+            # Stop the listeners
+            self.stop_event_listeners()
 
     def process_all_entries(self):
         """Process all entries when triggered."""
@@ -487,7 +491,7 @@ class OrderForm(tk.Tk):
             messagebox.showinfo("Automation", "All entries have been submitted to the application.")
             # Clear entries after processing
             self.formhandler.data_list = []
-            self.entries_tree.delete(*self.entries_tree.get_children())
+            self.refresh_entries_tree()
 
     def format_time_entry(self, event, entry_widget):
         # Format the time entry as HH:MM:SS
