@@ -1,6 +1,9 @@
 import pyautogui
 import time
 from formHandler import FormHandler
+from pynput import mouse, keyboard
+from pynput.mouse import Listener as MouseListener
+from pynput.keyboard import Listener as KeyboardListener, Key
 
 class AutomationHelper:
     """
@@ -10,7 +13,59 @@ class AutomationHelper:
         self.formhandler = formhandler
         self.data = None
         pyautogui.FAILSAFE = False
+        
+        # Flag to control whether we should stop mid-automation
+        self.stop_requested = False
 
+        # We'll create listeners that set `stop_requested` to True if user clicks or presses a key
+        self.mouse_listener = MouseListener(on_click=self.on_mouse_click)
+        self.keyboard_listener = KeyboardListener(on_press=self.on_key_press)
+
+    def on_mouse_click(self, x, y, button, pressed):
+        if pressed:
+            self.stop_requested = True
+
+    def on_key_press(self, key):
+        # If user presses ESC, for instance, we stop
+        if key == Key.esc:
+            self.stop_requested = True
+
+    def start_listeners(self):
+        """Start the mouse and keyboard listeners in non-blocking mode."""
+        self.mouse_listener.start()
+        self.keyboard_listener.start()
+
+    def stop_listeners(self):
+        """Stop the mouse/keyboard listeners."""
+        self.mouse_listener.stop()
+        self.keyboard_listener.stop()
+
+    def perform_automation(self):
+        # Start our listeners
+        self.start_listeners()
+        try:
+            for item in self.formhandler:
+                # If at any time stop is requested, break
+                if self.stop_requested:
+                    print("User interrupt detected. Stopping automation.")
+                    return "User interrupt"
+
+                self.data = item
+                inserted = self.insert_values()
+
+                if not inserted:
+                    print("Could not insert values for an entry. Exiting automation.")
+                    return "Could not insert values for an entry."
+
+                # Again, check if user requested stop between each item
+                if self.stop_requested:
+                    print("User interrupt detected. Stopping automation.")
+                    return "User interrupt"
+
+        finally:
+            # Always stop listeners, even if there was an exception
+            self.stop_listeners()
+    
     def type_hours(self, hours_str):
         # Convert the float hours to the required string format (1.2 -> "1,2")
         hours_str = self.float_to_string(hours_str)
@@ -93,16 +148,7 @@ class AutomationHelper:
                 self.type_hours(self.data["Overwork 1 Driving"])
 
         print("Automation completed successfully.")
-        return True
-
-    def perform_automation(self):
-        # Process each order
-        for item in self.formhandler:
-            self.data = item
-            if not self.insert_values():
-                print("Could not insert values for an entry. Exiting automation.")
-                return "Could not insert values for an entry."
-        
+        return True      
         
     def float_to_string(self, input_float):
         # Format the float to a string with 2 decimal places

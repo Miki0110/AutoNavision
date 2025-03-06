@@ -1,5 +1,5 @@
 import pandas as pd
-from config_handler import get_config, update_config
+from config.config_handler import get_config, update_config
 
 class FormHandler:
     def __init__(self, form):

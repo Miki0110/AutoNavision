@@ -1,4 +1,4 @@
-from gui import OrderForm
+from gui.app import OrderForm
 from automation import AutomationHelper
 
 def main():
@@ -10,4 +10,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
