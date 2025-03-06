@@ -58,6 +58,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Intern Møde'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -67,6 +68,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kurses Intern'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -76,6 +78,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Kontor tid', 'Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kursus Extern'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -85,6 +88,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Kontor tid', 'Kurses Intern', 'Kursus Extern', 'Intern Møde'], 'var': tk.StringVar(), 'default': 'Kontor tid'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -95,6 +99,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Ferie', 'Sygdom', 'Barns sygedag', 'Afspasering'], 'var': tk.StringVar(), 'default': 'Ferie'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -104,6 +109,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Ferie', 'Sygdom', 'Barns sygedag', 'Afspasering'], 'var': tk.StringVar(), 'default': 'Sygdom'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -113,6 +119,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Ferie', 'Sygdom', 'Barns sygedag', 'Afspasering'], 'var': tk.StringVar(), 'default': 'Barns sygedag'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
@@ -122,6 +129,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
+                {'label': 'Order Number', 'type': 'label', 'var': tk.StringVar(), 'default': 'Uproduktiv tid'},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Ferie', 'Sygdom', 'Barns sygedag', 'Afspasering'], 'var': tk.StringVar(), 'default': 'Afspasering'},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
