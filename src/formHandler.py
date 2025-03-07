@@ -78,12 +78,12 @@ class FormHandler:
         new_overwork2_driving = overwork2_driving + max(0, remaining_driving_hours - self.overwork1_limit)
 
         return {
-            "Normal Hours": new_normal_hours,
-            "Overwork 1 Hours": new_overwork1_hours,
-            "Overwork 2 Hours": new_overwork2_hours,
-            "Normal Driving": new_normal_driving,
-            "Overwork 1 Driving": new_overwork1_driving,
-            "Overwork 2 Driving": new_overwork2_driving,
+            "Normal Hours": new_normal_hours - normal_hours,
+            "Overwork 1 Hours": new_overwork1_hours - overwork1_hours,
+            "Overwork 2 Hours": new_overwork2_hours - overwork2_hours,
+            "Normal Driving": new_normal_driving - normal_driving,
+            "Overwork 1 Driving": new_overwork1_driving - overwork1_driving,
+            "Overwork 2 Driving": new_overwork2_driving - overwork2_driving,
         }
     
     def remove_form(self, index):
