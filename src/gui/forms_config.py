@@ -12,7 +12,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Order Number', 'type': 'ordernumber_combobox', 'var': tk.StringVar()},
-                {'label': 'Order Name', 'type': 'label', 'var': order_name_var},
+                {'label': 'Order Name', 'type': 'ordername_combobox', 'var': tk.StringVar()},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Software', 'Intern Indkøring', 'Extern Indkøring'], 'var': tk.StringVar(), 'default': 'Intern Indkøring'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
@@ -23,7 +23,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Order Number', 'type': 'ordernumber_combobox', 'var': tk.StringVar()},
-                {'label': 'Order Name', 'type': 'label', 'var': order_name_var},
+                {'label': 'Order Name', 'type': 'ordername_combobox', 'var': tk.StringVar()},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Software', 'Intern Indkøring', 'Extern Indkøring', 'Kørsel/Rejsetid'], 'var': tk.StringVar(), 'default': 'Extern Indkøring'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
@@ -34,7 +34,7 @@ def create_form_configs(order_name_var):
             'fields': [
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Order Number', 'type': 'ordernumber_combobox', 'var': tk.StringVar()},
-                {'label': 'Order Name', 'type': 'label', 'var': order_name_var},
+                {'label': 'Order Name', 'type': 'ordername_combobox', 'var': tk.StringVar()},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Software', 'Intern Indkøring', 'Extern Indkøring', 'Kørsel/Rejsetid'], 'var': tk.StringVar(), 'default': 'Software'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
                 {'label': 'Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar(), 'default': '08:00:00'},
@@ -47,9 +47,13 @@ def create_form_configs(order_name_var):
                 {'label': 'Order Type', 'type': 'label', 'var': tk.StringVar(), 'default': 'Sag'},
                 {'label': 'Date', 'type': 'date_entry', 'var': tk.StringVar()},
                 {'label': 'Order Number', 'type': 'ordernumber_combobox', 'var': tk.StringVar()},
-                {'label': 'Order Name', 'type': 'label', 'var': order_name_var},
+                {'label': 'Order Name', 'type': 'ordername_combobox', 'var': tk.StringVar()},
                 {'label': 'Order Line', 'type': 'combobox', 'options': ['Kørsel/Rejsetid'], 'var': tk.StringVar(), 'default': 'Kørsel/Rejsetid'},
                 {'label': 'Driving Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar()},
+                {'label': 'Number plate', 'type': 'platenumber_combobox', 'var': tk.StringVar()},
+                {'label': 'Car', 'type': 'car_combobox', 'var': tk.StringVar()},
+                {'label': 'From Adress', 'type': 'address_combobox', 'var': tk.StringVar()},
+                {'label': 'To Adress', 'type': 'address_combobox', 'var': tk.StringVar()},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
             ]
         },

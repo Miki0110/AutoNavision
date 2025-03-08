@@ -46,10 +46,43 @@ class FormHandlingMixin:
                 from tkinter import ttk
                 ordernumber = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.order_numbers.keys()))
                 ordernumber.grid(row=idx, column=1, padx=10, pady=10)
-                ordernumber.bind("<<ComboboxSelected>>", self.populate_order_number)
-                ordernumber.bind("<FocusOut>", self.check_new_order_number)
+                ordernumber.bind("<<ComboboxSelected>>", self.populate_order("number"))
+                ordernumber.bind("<FocusOut>", self.check_new_order("number"))
                 field['widget'] = ordernumber
-                self.order_number_combobox = ordernumber
+                self.ordernumber_combobox = ordernumber
+            elif field['type'] == 'ordername_combobox':
+                from tkinter import ttk
+                ordername = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.order_numbers.values()))
+                ordername.grid(row=idx, column=1, padx=10, pady=10)
+                ordername.bind("<<ComboboxSelected>>", self.populate_order("name"))
+                ordername.bind("<FocusOut>", self.check_new_order("name"))
+                field['widget'] = ordername
+                self.ordername_combobox = ordername
+
+            elif field['type'] == 'platenumber_combobox':
+                from tkinter import ttk
+                plate = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.plates.keys()))
+                plate.grid(row=idx, column=1, padx=10, pady=10)
+                plate.bind("<<ComboboxSelected>>", self.populate_cars("plate"))
+                plate.bind("<FocusOut>", self.check_new_car("plate"))
+                field['widget'] = plate
+                self.plate_combobox = plate
+            elif field['type'] == 'car_combobox':
+                from tkinter import ttk
+                car = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.plates.values()))
+                car.grid(row=idx, column=1, padx=10, pady=10)
+                car.bind("<<ComboboxSelected>>", self.populate_cars("car"))
+                car.bind("<FocusOut>", self.check_new_car("car"))
+                field['widget'] = car
+                self.car_combobox = car
+            
+            elif field['type'] == 'address_combobox':
+                from tkinter import ttk
+                address = ttk.Combobox(self.form_frame, textvariable=field_var, values=self.addresses, width=40)
+                address.grid(row=idx, column=1, padx=10, pady=10)
+                address.bind("<FocusOut>", self.check_new_address)
+                field['widget'] = address
+                self.address_combobox = address
 
             elif field['type'] == 'time_entry':
                 entry = tk.Entry(self.form_frame, textvariable=field_var)
@@ -100,7 +133,7 @@ class FormHandlingMixin:
 
             elif field['type'] == 'checkbox':
                 checkbox = tk.Checkbutton(self.form_frame, variable=field_var)
-                checkbox.grid(row=idx, column=1, padx=10, pady=5, sticky='w')
+                checkbox.grid(row=idx, column=1, padx=150, pady=5, sticky='w')
                 field['widget'] = checkbox
                 if field['label'] == 'Multiple Days':
                     field_var.set(field.get('default', False))
@@ -137,6 +170,12 @@ class FormHandlingMixin:
                 if not order_template['line']:
                     messagebox.showerror("Order Line Error", f"Order Line '{order_line}' is not valid.")
                     return
+            elif label == 'Number plate':
+                order_template['plate'] = field['var'].get()
+            elif label == 'To Address':
+                order_template['to_address'] = field['var'].get()
+            elif label == 'From Address':             
+                order_template['from_address'] = field['var'].get()
             elif label == 'Date':
                 start_date = field['widget'].get_date()
             elif label == 'End Date':
@@ -215,35 +254,257 @@ class FormHandlingMixin:
             else:
                 field_var.set(default_value)
 
+    def populate_order(self, by_what):
+        """
+        Returns a function that handles <<ComboboxSelected>> events
+        for either the order number combobox or the order name combobox.
+        """
+        def _populate(event):
+            # The text the user picked
+            selected_text = event.widget.get()
 
-    def populate_order_number(self, event):
-        """When an order number is selected, populate the order name."""
-        selected_order_number = event.widget.get()
-        order_name = self.order_numbers.get(selected_order_number, "")
-        self.order_name_var.set(order_name)
+            if by_what == "number":
+                # selected_text is the 'Order Number'
+                number = selected_text
+                name = self.order_numbers.get(number, "")
 
-
-    def check_new_order_number(self, event):
-        """If user typed a new order number, ask for a name and update config."""
-        current_value = event.widget.get()
-        if current_value and current_value not in self.order_numbers:
-            import tkinter.simpledialog as simpledialog
-            order_name = simpledialog.askstring(
-                "New Order Number", 
-                f"Enter a name for Order Number '{current_value}':"
-            )
-            if order_name:
-                self.order_numbers[current_value] = order_name
-                self.order_number_combobox.config(values=list(self.order_numbers.keys()))
-                self.value_config['order_numbers'] = self.order_numbers
-                from config.config_handler import update_config
-                update_config(self.value_config)
-                self.order_name_var.set(order_name)
+                # Update the ordername combobox
+                self.ordername_combobox.set(name)
             else:
-                messagebox.showinfo("Info", "Order Number not added.")
-                event.widget.set('')
-                self.order_name_var.set("")
+                # selected_text is the 'Order Name'
+                name = selected_text
 
+                # We need to find which number it corresponds to
+                # (Search the dict for the key with the matching value)
+                number = None
+                for k, v in self.order_numbers.items():
+                    if v == name:
+                        number = k
+                        break
+
+                if number:
+                    self.ordernumber_combobox.set(number)
+                else:
+                    # We have a name that doesn't exist in self.order_numbers values
+                    pass
+
+        return _populate
+
+
+
+    def check_new_order(self, by_what):
+        """
+        Returns a function that checks if the user typed a new order number or name,
+        and if so, prompts for the missing piece (the name or number).
+        """
+        def _check(event):
+            typed_value = event.widget.get().strip()
+            if not typed_value:
+                return  # user cleared the field
+
+            if by_what == "number":
+                # The user typed a new order number?
+                number = typed_value
+                if number not in self.order_numbers:
+                    # We'll ask for the name
+                    import tkinter.simpledialog as simpledialog
+                    order_name = simpledialog.askstring(
+                        "New Order Number",
+                        f"Enter a name for Order Number '{number}':"
+                    )
+                    if order_name:
+                        # Update dict
+                        self.order_numbers[number] = order_name
+
+                        # Update both comboboxes
+                        self.ordernumber_combobox.config(
+                            values=list(self.order_numbers.keys())
+                        )
+                        self.ordername_combobox.config(
+                            values=list(self.order_numbers.values())
+                        )
+
+                        # Force them to display the typed_value or the name
+                        self.ordernumber_combobox.set(number)
+                        self.ordername_combobox.set(order_name)
+
+                        # And save the updated data if you want
+                        self.value_config['order_numbers'] = self.order_numbers
+                        from config.config_handler import update_config
+                        update_config(self.value_config)
+                    else:
+                        # The user canceled => clear
+                        self.ordernumber_combobox.set("")
+                        self.ordername_combobox.set("")
+            else:
+                # The user typed a new order name?
+                name = typed_value
+                # If name not in self.order_numbers.values():
+                if name not in self.order_numbers.values():
+                    # We'll ask for the number
+                    import tkinter.simpledialog as simpledialog
+                    order_number = simpledialog.askstring(
+                        "New Order Name",
+                        f"Enter a Number for Order Name '{name}':"
+                    )
+                    if order_number:
+                        # Update the dictionary
+                        self.order_numbers[order_number] = name
+
+                        # Update comboboxes
+                        self.ordernumber_combobox.config(
+                            values=list(self.order_numbers.keys())
+                        )
+                        self.ordername_combobox.config(
+                            values=list(self.order_numbers.values())
+                        )
+
+                        # Force them to display the newly typed data
+                        self.ordernumber_combobox.set(order_number)
+                        self.ordername_combobox.set(name)
+
+                        # Save updated data
+                        self.value_config['order_numbers'] = self.order_numbers
+                        from config.config_handler import update_config
+                        update_config(self.value_config)
+                    else:
+                        # canceled => clear
+                        self.ordernumber_combobox.set("")
+                        self.ordername_combobox.set("")
+
+        return _check
+
+    
+    def populate_cars(self, by_what):
+        """
+        Returns a function that handles <<ComboboxSelected>> events
+        for either the plate number combobox or the car combobox.
+        """
+        def _populate(event):
+            # The text the user picked
+            selected_text = event.widget.get()
+
+            if by_what == "plate":
+                # selected_text is the 'Plate Number'
+                plate = selected_text
+                car = self.plates.get(plate, "")
+
+                # Update the car combobox
+                self.car_combobox.set(car)
+            else:
+                # selected_text is the 'Car'
+                car = selected_text
+
+                # We need to find which plate it corresponds to
+                # (Search the dict for the key with the matching value)
+                plate = None
+                for k, v in self.plates.items():
+                    if v == car:
+                        plate = k
+                        break
+
+                if plate:
+                    self.plate_combobox.set(plate)
+                else:
+                    # We have a car that doesn't exist in self.plates values
+                    pass
+
+        return _populate
+    
+    def check_new_car(self, by_what):
+        """
+        Returns a function that checks if the user typed a new plate number or car,
+        and if so, prompts for the missing piece (the car or plate number).
+        """
+        def _check(event):
+            typed_value = event.widget.get().strip()
+            if not typed_value:
+                return  # user cleared the field
+
+            if by_what == "plate":
+                # The user typed a new plate number?
+                plate = typed_value
+                if plate not in self.plates:
+                    # We'll ask for the name
+                    import tkinter.simpledialog as simpledialog
+                    car_name = simpledialog.askstring(
+                        "New car",
+                        f"Enter a name for the car '{plate}':"
+                    )
+                    if car_name:
+                        # Update dict
+                        self.plates[plate] = car_name
+
+                        # Update both comboboxes
+                        self.plate_combobox.config(
+                            values=list(self.plates.keys())
+                        )
+                        self.car_combobox.config(
+                            values=list(self.plates.values())
+                        )
+
+                        # Force them to display the typed_value or the name
+                        self.plate_combobox.set(plate)
+                        self.car_combobox.set(car_name)
+
+                        # And save the updated data if you want
+                        self.value_config['plates'] = self.plates
+                        from config.config_handler import update_config
+                        update_config(self.value_config)
+                    else:
+                        # The user canceled => clear
+                        self.ordernumber_combobox.set("")
+                        self.ordername_combobox.set("")
+            else:
+                # The user typed a new car name?
+                car_name = typed_value
+                # If name not in self.order_numbers.values():
+                if car_name not in self.plates.values():
+                    # We'll ask for the number
+                    import tkinter.simpledialog as simpledialog
+                    plate_number = simpledialog.askstring(
+                        "New car",
+                        f"Enter a Number for car '{car_name}':"
+                    )
+                    if plate_number:
+                        # Update the dictionary
+                        self.plates[plate_number] = car_name
+
+                        # Update comboboxes
+                        self.plate_combobox.config(
+                            values=list(self.plates.keys())
+                        )
+                        self.car_combobox.config(
+                            values=list(self.plates.values())
+                        )
+
+                        # Force them to display the newly typed data
+                        self.plate_combobox.set(plate_number)
+                        self.car_combobox.set(car_name)
+
+                        # Save updated data
+                        self.value_config['plates'] = self.plates
+                        from config.config_handler import update_config
+                        update_config(self.value_config)
+                    else:
+                        # canceled => clear
+                        self.ordernumber_combobox.set("")
+                        self.ordername_combobox.set("")
+
+        return _check
+
+    def check_new_address(self, event):
+        """If user typed a new address update config."""
+        current_value = event.widget.get()
+        if current_value and current_value not in self.addresses:
+            # Ignore misstypes
+            if current_value in ['', '  ', '   ', '    ', '     ']:
+                return
+            self.addresses.append(current_value)
+            self.address_combobox.config(values=self.addresses)
+            self.value_config['addresses'] = self.addresses
+            from config.config_handler import update_config
+            update_config(self.value_config)
 
     def multiple_days_toggled(self, *args):
         """Enable or disable the 'End Date' field based on the 'Multiple Days' checkbox."""

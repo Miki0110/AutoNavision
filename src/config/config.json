@@ -27,5 +27,11 @@
         "010-24-4492": "Fiskernes fiskesortering",
         "010-22-4377": "Sanofi",
         "010-22-4385": "SVM penfinder"
-    }
+    },
+    "plates": {
+        "EE 27 964": "Skoda Citigo"
+    },
+    "addresses": [
+        "Hedemarken 1, 7200 Grindsted"
+    ]
 }

@@ -23,6 +23,8 @@ class OrderForm(tk.Tk,
         
         # Shared properties needed by mixins
         self.order_numbers = self.value_config["order_numbers"]
+        self.plates = self.value_config["plates"]
+        self.addresses = self.value_config["addresses"]
         self.unproductive_number = self.value_config["defaults"]["unproductive_number"]
         self.order_line_mapping = self.value_config["order_line_mapping"]
         self.ctrl_pressed = False  # used by event listeners

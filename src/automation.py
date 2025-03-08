@@ -75,6 +75,9 @@ class AutomationHelper:
         pyautogui.typewrite(hours_str)
 
     def insert_values(self):
+        #TODO: Implement the address field
+        #TODO: Implement the plate field
+        
         time.sleep(0.1)
         # Step 1: Press down arrow keys
         pyautogui.press('down', presses=3, interval=0.1)
