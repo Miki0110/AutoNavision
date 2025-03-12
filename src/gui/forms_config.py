@@ -52,8 +52,8 @@ def create_form_configs(order_name_var):
                 {'label': 'Driving Time (H:M:S)', 'type': 'time_entry', 'var': tk.StringVar()},
                 {'label': 'Number plate', 'type': 'platenumber_combobox', 'var': tk.StringVar()},
                 {'label': 'Car', 'type': 'car_combobox', 'var': tk.StringVar()},
-                {'label': 'From Adress', 'type': 'address_combobox', 'var': tk.StringVar()},
-                {'label': 'To Adress', 'type': 'address_combobox', 'var': tk.StringVar()},
+                {'label': 'From Address', 'type': 'address_combobox', 'var': tk.StringVar()},
+                {'label': 'To Address', 'type': 'address_combobox', 'var': tk.StringVar()},
                 {'label': 'Description', 'type': 'text', 'var': tk.StringVar()},
             ]
         },

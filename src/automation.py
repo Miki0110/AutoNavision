@@ -75,14 +75,11 @@ class AutomationHelper:
         pyautogui.typewrite(hours_str)
 
     def insert_values(self):
-        #TODO: Implement the address field
-        #TODO: Implement the plate field
-        
         time.sleep(0.1)
         # Step 1: Press down arrow keys
         pyautogui.press('down', presses=3, interval=0.1)
         # Press left until it's the first field
-        pyautogui.press('left', presses=20, interval=0.1)
+        pyautogui.press('left', presses=30, interval=0.1)
 
         # Step 2: Enter the date (format dd-mm-yy)
         pyautogui.typewrite(self.data['Date'])
@@ -102,6 +99,7 @@ class AutomationHelper:
 
         # Step 5: Press Tab twice and enter order line
         pyautogui.press('tab', presses=2, interval=0.1)
+        time.sleep(0.1)
         pyautogui.typewrite(self.data['Line'])
         time.sleep(0.1)
 
@@ -109,12 +107,12 @@ class AutomationHelper:
         pyautogui.press('tab', presses=5, interval=0.1)
         if self.data['Description']:
             pyautogui.typewrite(self.data['Description'])
-            time.sleep(0.1)
         else:
             # Skip typing if no description
             pass
 
         # Step 7: Press Tab and enter normal hours
+        time.sleep(0.1)
         pyautogui.press('tab')
         time.sleep(0.1)
         if (self.data["Normal Hours"] + self.data["Overwork 1 Hours"] + self.data["Overwork 2 Hours"]) > 0:
@@ -127,16 +125,16 @@ class AutomationHelper:
             time.sleep(0.1)
             if self.data["Overwork 1 Hours"] > 0:
                 self.type_hours(self.data["Overwork 1 Hours"])
+            time.sleep(0.1)
             pyautogui.press('tab')
             time.sleep(0.1)
             if self.data["Overwork 2 Hours"] > 0:
                 self.type_hours(self.data["Overwork 2 Hours"])
         else:
-            pyautogui.press('tab')
-            time.sleep(0.1)
-            pyautogui.press('tab')
+            pyautogui.press('tab', presses=2, interval=0.1)
 
         # Step 9: Press Tab to reach driving hours fields
+        time.sleep(0.1)
         pyautogui.press('tab')
         time.sleep(0.1)
         # Enter normal driving hours
@@ -149,7 +147,43 @@ class AutomationHelper:
             time.sleep(0.1)
             if self.data["Overwork 1 Driving"] > 0:
                 self.type_hours(self.data["Overwork 1 Driving"])
+            time.sleep(0.1)
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            if self.data["Overwork 2 Driving"] > 0:
+                self.type_hours(self.data["Overwork 2 Driving"])
+        else:
+            pyautogui.press('tab', presses=2, interval=0.1)
+        time.sleep(0.1)
+        pyautogui.press('tab', presses=2, interval=0.1)
+        time.sleep(0.1)
 
+        # Step 10: Insert the car plate
+        if self.data["plate"]:
+            pyautogui.press('tab')
+            time.sleep(0.1)
+            pyautogui.typewrite(self.data["plate"])
+        else:
+            time.sleep(0.1)
+            pyautogui.press('tab')
+        
+        # Step 11: Insert the addresses
+        if self.data["to_address"]:
+            time.sleep(0.1)
+            pyautogui.press('tab', presses=2, interval=0.1)
+            time.sleep(0.1)
+            pyautogui.typewrite(self.data["to_address"])
+        else:
+            time.sleep(0.1)
+            pyautogui.press('tab', presses=2, interval=0.1)
+        
+        if self.data["from_address"]:
+            time.sleep(0.1)
+            pyautogui.press('tab', presses=2, interval=0.1)
+            time.sleep(0.1)
+            pyautogui.typewrite(self.data["from_address"])
+
+        time.sleep(0.1)
         print("Automation completed successfully.")
         return True      
         

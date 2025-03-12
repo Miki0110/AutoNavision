@@ -209,6 +209,9 @@ class FormHandlingMixin:
                     line=order_template['line'],
                     work_hours_used=order_template.get('work_hours_used', 0),
                     driving_hours_used=order_template.get('driving_hours_used', 0),
+                    plate=order_template.get('plate', ''),
+                    to_address=order_template.get('to_address', ''),
+                    from_address=order_template.get('from_address', ''),
                     description=order_template.get('description', "")
                 )
         else:
@@ -221,6 +224,9 @@ class FormHandlingMixin:
                 line=order_template['line'],
                 work_hours_used=order_template.get('work_hours_used', 0),
                 driving_hours_used=order_template.get('driving_hours_used', 0),
+                plate=order_template.get('plate', ''),
+                to_address=order_template.get('to_address', ''),
+                from_address=order_template.get('from_address', ''),
                 description=order_template.get('description', "")
             )
 

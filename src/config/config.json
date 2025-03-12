@@ -4,6 +4,7 @@
         "overwork2": "no limit"
     },
     "order_line_mapping": {
+        "Software M\u00f8de": "180100",
         "Software": "180200",
         "Intern Indk\u00f8ring": "700300",
         "Extern Indk\u00f8ring": "700800",
@@ -32,6 +33,7 @@
         "EE 27 964": "Skoda Citigo"
     },
     "addresses": [
-        "Hedemarken 1, 7200 Grindsted"
+        "Hedemarken 1, 7200 Grindsted",
+        "Norgeskajen 12, Hirtshals"
     ]
 }
