@@ -4,6 +4,11 @@ from pynput.keyboard import Listener as KeyboardListener, Key
 from tkinter import messagebox
 
 class EventHandlingMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ctrl_pressed = False
+        self._should_process_after_ctrl = False
+
     def start_event_listeners(self):
         """Start mouse and keyboard listeners for CTRL + Left Click."""
         self.mouse_listener = MouseListener(on_click=self.on_mouse_click)
@@ -13,7 +18,10 @@ class EventHandlingMixin:
         )
         self.mouse_listener.start()
         self.keyboard_listener.start()
-        messagebox.showinfo("Automation", "Ready to import all entries. CTRL + Left Click a column in Navision to start.")
+        messagebox.showinfo(
+            "Automation",
+            "Ready to import all entries. CTRL + Left Click a column in Navision to start."
+        )
 
     def stop_event_listeners(self):
         """Stop the listeners when the app is closed."""
@@ -28,19 +36,20 @@ class EventHandlingMixin:
             self.ctrl_pressed = True
 
     def on_key_release(self, key):
-        """Track if CTRL is released."""
+        """Track if CTRL is released, and process if needed."""
         if key in [Key.ctrl_l, Key.ctrl_r]:
             self.ctrl_pressed = False
+            # If we flagged that we want to process after CTRL is released, do it now
+            if self._should_process_after_ctrl:
+                self._should_process_after_ctrl = False
+                self.process_all_entries()
+                self.stop_event_listeners()
 
     def on_mouse_click(self, x, y, button, pressed):
-        """Trigger `process_all_entries` on CTRL + Left Click."""
+        """Flag a process request on CTRL + Left Click."""
         if pressed and button == mouse.Button.left and self.ctrl_pressed:
-            # Wait for the CTRL key to be released
-            while self.ctrl_pressed:
-                pass
-            self.process_all_entries()
-            # Stop the listeners
-            self.stop_event_listeners()
+            # Instead of busy-waiting here, just set a flag.
+            self._should_process_after_ctrl = True
 
     def process_all_entries(self):
         """Process all entries when triggered."""
@@ -54,7 +63,7 @@ class EventHandlingMixin:
         if result:
             messagebox.showerror("Automation Error", result)
         else:
-            messagebox.showinfo("Automation", "All entries have been submitted to the application.")
+            messagebox.showinfo("Automation", "All entries have been submitted.")
             # Clear entries after processing
             self.formhandler.data_list = []
             self.refresh_entries_tree()

@@ -76,10 +76,9 @@ class AutomationHelper:
 
     def insert_values(self):
         time.sleep(0.1)
-        # Step 1: Press down arrow keys
-        pyautogui.press('down', presses=3, interval=0.1)
-        # Press left until it's the first field
-        pyautogui.press('left', presses=30, interval=0.1)
+        # Step 1: Create a new entry
+        pyautogui.press('F3', presses=3, interval=0.1)
+        time.sleep(0.1)
 
         # Step 2: Enter the date (format dd-mm-yy)
         pyautogui.typewrite(self.data['Date'])
