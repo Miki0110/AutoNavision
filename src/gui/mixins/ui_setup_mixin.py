@@ -78,3 +78,4 @@ class UiSetupMixin:
         self.entries_tree.bind("<Button-3>", self.show_context_menu)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.context_menu.add_command(label="Delete Entry", command=self.delete_entry)
+        self.context_menu.add_command(label="Load order data", command=self.load_entry)

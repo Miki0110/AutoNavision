@@ -1,7 +1,7 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from tkcalendar import DateEntry
-import re
 from datetime import datetime, timedelta
 
 class FormHandlingMixin:
@@ -35,15 +35,11 @@ class FormHandlingMixin:
                 entry = tk.Entry(self.form_frame, textvariable=field_var)
                 entry.grid(row=idx, column=1, padx=10, pady=5)
                 field_var.set(default_value)
-
             elif field['type'] == 'combobox':
-                from tkinter import ttk
                 combobox = ttk.Combobox(self.form_frame, textvariable=field_var, values=field.get('options', []))
                 combobox.grid(row=idx, column=1, padx=10, pady=5)
                 combobox.set(default_value)
-
             elif field['type'] == 'ordernumber_combobox':
-                from tkinter import ttk
                 ordernumber = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.order_numbers.keys()))
                 ordernumber.grid(row=idx, column=1, padx=10, pady=10)
                 ordernumber.bind("<<ComboboxSelected>>", self.populate_order("number"))
@@ -51,7 +47,6 @@ class FormHandlingMixin:
                 field['widget'] = ordernumber
                 self.ordernumber_combobox = ordernumber
             elif field['type'] == 'ordername_combobox':
-                from tkinter import ttk
                 ordername = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.order_numbers.values()))
                 ordername.grid(row=idx, column=1, padx=10, pady=10)
                 ordername.bind("<<ComboboxSelected>>", self.populate_order("name"))
@@ -60,7 +55,6 @@ class FormHandlingMixin:
                 self.ordername_combobox = ordername
 
             elif field['type'] == 'platenumber_combobox':
-                from tkinter import ttk
                 plate = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.plates.keys()))
                 plate.grid(row=idx, column=1, padx=10, pady=10)
                 plate.bind("<<ComboboxSelected>>", self.populate_cars("plate"))
@@ -68,29 +62,24 @@ class FormHandlingMixin:
                 field['widget'] = plate
                 self.plate_combobox = plate
             elif field['type'] == 'car_combobox':
-                from tkinter import ttk
                 car = ttk.Combobox(self.form_frame, textvariable=field_var, values=list(self.plates.values()))
                 car.grid(row=idx, column=1, padx=10, pady=10)
                 car.bind("<<ComboboxSelected>>", self.populate_cars("car"))
                 car.bind("<FocusOut>", self.check_new_car("car"))
                 field['widget'] = car
                 self.car_combobox = car
-            
             elif field['type'] == 'address_combobox':
-                from tkinter import ttk
                 address = ttk.Combobox(self.form_frame, textvariable=field_var, values=self.addresses, width=40)
                 address.grid(row=idx, column=1, padx=10, pady=10)
                 address.bind("<FocusOut>", self.check_new_address)
                 field['widget'] = address
                 self.address_combobox = address
-
             elif field['type'] == 'time_entry':
                 entry = tk.Entry(self.form_frame, textvariable=field_var)
                 entry.grid(row=idx, column=1, padx=10, pady=5)
                 # Format time while typing
                 entry.bind('<KeyRelease>', lambda event, e=entry: self.format_time_entry(event, e))
                 field_var.set(default_value)
-
             elif field['type'] == 'date_entry':
                 date_entry = DateEntry(
                     self.form_frame, textvariable=field_var, width=12,
@@ -150,7 +139,6 @@ class FormHandlingMixin:
         multiple_days = False
         end_date = None
         order_template = {}
-
         # Check if 'Multiple Days' is active
         for field in config['fields']:
             if field['label'] == 'Multiple Days':
@@ -214,6 +202,7 @@ class FormHandlingMixin:
                     from_address=order_template.get('from_address', ''),
                     description=order_template.get('description', "")
                 )
+                self.formvalues.append({"task_name": self.current_task, "config": config.copy()})
         else:
             # Single day
             self.formhandler.add_form(
@@ -229,6 +218,10 @@ class FormHandlingMixin:
                 from_address=order_template.get('from_address', ''),
                 description=order_template.get('description', "")
             )
+            config_values = {}
+            for field in config['fields']:
+                config_values[field['label']] = field['var'].get()
+            self.formvalues.append({"task_name": self.current_task, "config_values": config_values})
 
         self.refresh_entries_tree()
         self.reset_to_defaults()
@@ -520,8 +513,10 @@ class FormHandlingMixin:
             if field['label'] == 'Multiple Days':
                 multiple_days_checked = field['var'].get()
             if field['label'] == 'End Date':
-                end_date_widget = field['widget']
-        if end_date_widget:
+                end_date_widget = field.get('widget')
+
+        if end_date_widget and end_date_widget.winfo_exists():
+            # Only proceed if the widget hasn't been destroyed
             if multiple_days_checked:
                 end_date_widget.config(state='normal')
             else:

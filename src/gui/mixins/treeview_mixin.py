@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import messagebox
 
 class TreeViewMixin:
@@ -18,9 +19,22 @@ class TreeViewMixin:
                 values = self.entries_tree.item(selected_item, "values")
                 index = int(values[0])
                 self.formhandler.remove_form(index)
+                self.formvalues.pop(index)
                 self.refresh_entries_tree()
         else:
             messagebox.showwarning("No Selection", "No entry selected.")
+    
+    def load_entry(self):
+        selected_item = self.entries_tree.selection()
+        index = int(self.entries_tree.item(selected_item, "values")[0])
+        values = self.formvalues[index]
+
+        self.load_form(values["task_name"])
+        config = self.form_configs[self.current_task]
+        for field in config['fields']:
+            if field['type'] != 'checkbox':
+                value = values['config_values'][field['label']]
+                field['var'].set(value)
 
     def refresh_entries_tree(self):
         # Clear existing Treeview entries

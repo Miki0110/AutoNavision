@@ -66,6 +66,7 @@ class EventHandlingMixin:
             messagebox.showinfo("Automation", "All entries have been submitted.")
             # Clear entries after processing
             self.formhandler.data_list = []
+            self.formvalues = []
             self.refresh_entries_tree()
 
     def on_closing(self):

@@ -18,6 +18,7 @@ class OrderForm(tk.Tk,
 
         # Data / config
         self.formhandler = FormHandler(self)
+        self.formvalues = []
         self.value_config = get_config()
         self.current_task = None
         
